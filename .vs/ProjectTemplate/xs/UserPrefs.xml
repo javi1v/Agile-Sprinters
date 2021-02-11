@@ -1,0 +1,34 @@
+﻿<Properties StartupConfiguration="{259A06F5-E8C4-4730-AC3C-F3118159CBD7}|">
+  <MonoDevelop.Ide.ItemProperties.ProjectTemplate PreferredExecutionTarget="/Applications/Safari.app" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="ProjectTemplate/ProjectServices.asmx.cs">
+    <Files>
+      <File FileName="ProjectTemplate/App_Start/WebApiConfig.cs" Line="5" Column="1" />
+      <File FileName="ProjectTemplate/ProjectServices.asmx" />
+      <File FileName="ProjectTemplate/ProjectServices.asmx.cs" Line="60" Column="23" />
+      <File FileName="ProjectTemplate/Web.config" />
+      <File FileName="ProjectTemplate/index.html" />
+      <File FileName="ProjectTemplate/Global.asax" />
+      <File FileName="ProjectTemplate/packages.config" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="ProjectTemplate" expanded="True">
+            <Node name="ProjectTemplate" expanded="True">
+              <Node name="App_Start" expanded="True" />
+              <Node name="ProjectServices.asmx" expanded="True">
+                <Node name="ProjectServices.asmx.cs" selected="True" />
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>
