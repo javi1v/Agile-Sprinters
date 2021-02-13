@@ -114,12 +114,12 @@ namespace ProjectTemplate
 		}
 
 		[WebMethod]
-		public String SeeAccountNames()
+		public string SeeAccountNames()
 		{
 
 			// Stores all first and last names
-			String accounts = "";
-			
+			string accounts = "";
+
 			// This query gets all the first and last names
 			string sqlSelect = "SELECT FirstName, LastName FROM Users";
 
@@ -148,10 +148,114 @@ namespace ProjectTemplate
 			return accounts;
 		}
 
+
+		[WebMethod]
+		public string SeeEmails()
+		{
+
+			// Stores all emails
+			string emails = "";
+
+			// This query gets all the emails
+			string sqlSelect = "SELECT Email FROM Users";
+
+			//set up our connection object to be ready to use our connection string
+			MySqlConnection sqlConnection = new MySqlConnection(getConString());
+			//set up our command object to use our connection, and our query
+			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+			//a data adapter acts like a bridge between our command object and 
+			//the data we are trying to get back and put in a table object
+			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+			//here's the table we want to fill with the results from our query
+			DataTable sqlDt = new DataTable();
+			//here we go filling it!
+			sqlDa.Fill(sqlDt);
+
+			// Formats the list of emails
+			foreach (DataRow row in sqlDt.Rows)
+			{
+				emails += row[0];
+				emails += ", ";
+			}
+
+			// returns all the emails
+			return emails;
+		}
+
+
+		[WebMethod]
+		public string SeeFirstNames()
+		{
+
+			// Stores all first names
+			string firstNames = "";
+
+			// This query gets all the first names
+			string sqlSelect = "SELECT FirstName FROM Users";
+
+			//set up our connection object to be ready to use our connection string
+			MySqlConnection sqlConnection = new MySqlConnection(getConString());
+			//set up our command object to use our connection, and our query
+			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+			//a data adapter acts like a bridge between our command object and 
+			//the data we are trying to get back and put in a table object
+			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+			//here's the table we want to fill with the results from our query
+			DataTable sqlDt = new DataTable();
+			//here we go filling it!
+			sqlDa.Fill(sqlDt);
+
+			// Formats the list of names
+			foreach (DataRow row in sqlDt.Rows)
+			{
+				firstNames += row[0];
+				firstNames += ", ";
+			}
+
+			// returns all the names
+			return firstNames;
+		}
+
+
+		[WebMethod]
+		public string SeeLastNames()
+		{
+			// Stores all last names
+			string lastNames = "";
+
+			// This query gets all the last names
+			string sqlSelect = "SELECT LastName FROM Users";
+
+			//set up our connection object to be ready to use our connection string
+			MySqlConnection sqlConnection = new MySqlConnection(getConString());
+			//set up our command object to use our connection, and our query
+			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+			//a data adapter acts like a bridge between our command object and 
+			//the data we are trying to get back and put in a table object
+			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+			//here's the table we want to fill with the results from our query
+			DataTable sqlDt = new DataTable();
+			//here we go filling it!
+			sqlDa.Fill(sqlDt);
+
+			// Formats the list of names
+			foreach (DataRow row in sqlDt.Rows)
+			{
+				lastNames += row[0];
+				lastNames += ", ";
+			}
+
+			// returns all the names
+			return lastNames;
+		}
+
 		[WebMethod]
 		public bool LogOff()
         {
-			// Can not log out of the system until their is a true log off feature
+			// Can not log out of the system until their is a true log on feature
 			// Very temporary return true statement
 			return true;
         }
