@@ -6,6 +6,9 @@ using System.Web.Services;
 using MySql.Data;
 using MySql.Data.MySqlClient;
 using System.Data;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ProjectTemplate
 {
@@ -48,32 +51,16 @@ namespace ProjectTemplate
 			{
 				return "Something went wrong, please check your credentials and db name and try again.  Error: "+e.Message;
 			}
-
-
 		}
+
 
 		[WebMethod]
 		public int NumberOfAccounts()
 		{
-			// A simple query that will need to be updated when size of database is larger
-			string sqlSelect = "SELECT * from Users";
-
-			//set up our connection object to be ready to use our connection string
-			MySqlConnection sqlConnection = new MySqlConnection(getConString());
-			//set up our command object to use our connection, and our query
-			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
-
-
-			//a data adapter acts like a bridge between our command object and 
-			//the data we are trying to get back and put in a table object
-			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-			//here's the table we want to fill with the results from our query
-			DataTable sqlDt = new DataTable();
-			//here we go filling it!
-			sqlDa.Fill(sqlDt);
-			//return the number of rows we have, that's how many accounts are in the system!
-			return sqlDt.Rows.Count;
+			Account[] account = GetAccounts();
+			return account.Length;
 		}
+
 
 		[WebMethod]
 		public bool LogOn(string email, string password)
@@ -113,144 +100,97 @@ namespace ProjectTemplate
 			return wasSuccesful;
 		}
 
+
 		[WebMethod]
-		public string SeeAccountNames()
-		{
+		public Account[] GetAccounts()
+        {
+			// TODO Check if a user is logged in
+			// TODO only give password out if the user is an admin
+			DataTable sqlDataTable = new DataTable();
+			string sqlSelect = "select EmployeeId, Password, Email, FirstName, LastName, PhoneNumber, Title from Users";
 
-			// Stores all first and last names
-			string accounts = "";
-
-			// This query gets all the first and last names
-			string sqlSelect = "SELECT FirstName, LastName FROM Users";
-
-			//set up our connection object to be ready to use our connection string
 			MySqlConnection sqlConnection = new MySqlConnection(getConString());
 			//set up our command object to use our connection, and our query
 			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
 
-			//a data adapter acts like a bridge between our command object and 
-			//the data we are trying to get back and put in a table object
 			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-			//here's the table we want to fill with the results from our query
-			DataTable sqlDt = new DataTable();
-			//here we go filling it!
-			sqlDa.Fill(sqlDt);
+			sqlDa.Fill(sqlDataTable);
 
-			// Formats the list of names
-			foreach (DataRow row in sqlDt.Rows)
-			{
-				accounts += row[0];
-				accounts += " " + row[1];
-				accounts += ", ";
-			}
+			List<Account> accounts = new List<Account>();
+			for (int i = 0; i < sqlDataTable.Rows.Count; i++)
+            {
+				accounts.Add(new Account
+				{
+					EmployeeId = Convert.ToInt32(sqlDataTable.Rows[i]["EmployeeId"]),
+					Password = sqlDataTable.Rows[i]["Password"].ToString(),
+					Email = sqlDataTable.Rows[i]["Email"].ToString(),
+					FirstName = sqlDataTable.Rows[i]["FirstName"].ToString(),
+					LastName = sqlDataTable.Rows[i]["LastName"].ToString(),
+					PhoneNumber = sqlDataTable.Rows[i]["PhoneNumber"].ToString(),
+					Title = sqlDataTable.Rows[i]["Title"].ToString()
+				}); 
+				
+            }
 
-			// returns all the names
-			return accounts;
+			return accounts.ToArray();
 		}
 
 
 		[WebMethod]
-		public string SeeEmails()
+		public Account[] SeeEmails()
 		{
 
-			// Stores all emails
-			string emails = "";
-
-			// This query gets all the emails
-			string sqlSelect = "SELECT Email FROM Users";
-
-			//set up our connection object to be ready to use our connection string
-			MySqlConnection sqlConnection = new MySqlConnection(getConString());
-			//set up our command object to use our connection, and our query
-			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
-
-			//a data adapter acts like a bridge between our command object and 
-			//the data we are trying to get back and put in a table object
-			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-			//here's the table we want to fill with the results from our query
-			DataTable sqlDt = new DataTable();
-			//here we go filling it!
-			sqlDa.Fill(sqlDt);
-
-			// Formats the list of emails
-			foreach (DataRow row in sqlDt.Rows)
+			Account[] accounts = GetAccounts();
+			List<Account> accountEmails = new List<Account>();
+			foreach (Account account in accounts)
 			{
-				emails += row[0];
-				emails += ", ";
+				accountEmails.Add(new Account
+				{
+					EmployeeId = account.EmployeeId,
+					Email = account.Email
+				});
 			}
 
-			// returns all the emails
-			return emails;
+			return accountEmails.ToArray();
 		}
 
 
 		[WebMethod]
-		public string SeeFirstNames()
+		public Account[] SeeFirstNames()
 		{
 
-			// Stores all first names
-			string firstNames = "";
-
-			// This query gets all the first names
-			string sqlSelect = "SELECT FirstName FROM Users";
-
-			//set up our connection object to be ready to use our connection string
-			MySqlConnection sqlConnection = new MySqlConnection(getConString());
-			//set up our command object to use our connection, and our query
-			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
-
-			//a data adapter acts like a bridge between our command object and 
-			//the data we are trying to get back and put in a table object
-			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-			//here's the table we want to fill with the results from our query
-			DataTable sqlDt = new DataTable();
-			//here we go filling it!
-			sqlDa.Fill(sqlDt);
-
-			// Formats the list of names
-			foreach (DataRow row in sqlDt.Rows)
+			Account[] accounts = GetAccounts();
+			List<Account> accountEmails = new List<Account>();
+			foreach (Account account in accounts)
 			{
-				firstNames += row[0];
-				firstNames += ", ";
+				accountEmails.Add(new Account
+				{
+					EmployeeId = account.EmployeeId,
+					FirstName = account.FirstName
+				});
 			}
 
-			// returns all the names
-			return firstNames;
+			return accountEmails.ToArray();
 		}
 
 
 		[WebMethod]
-		public string SeeLastNames()
+		public Account[] SeeLastNames()
 		{
-			// Stores all last names
-			string lastNames = "";
-
-			// This query gets all the last names
-			string sqlSelect = "SELECT LastName FROM Users";
-
-			//set up our connection object to be ready to use our connection string
-			MySqlConnection sqlConnection = new MySqlConnection(getConString());
-			//set up our command object to use our connection, and our query
-			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
-
-			//a data adapter acts like a bridge between our command object and 
-			//the data we are trying to get back and put in a table object
-			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-			//here's the table we want to fill with the results from our query
-			DataTable sqlDt = new DataTable();
-			//here we go filling it!
-			sqlDa.Fill(sqlDt);
-
-			// Formats the list of names
-			foreach (DataRow row in sqlDt.Rows)
+			Account[] accounts = GetAccounts();
+			List<Account> accountEmails = new List<Account>();
+			foreach (Account account in accounts)
 			{
-				lastNames += row[0];
-				lastNames += ", ";
+				accountEmails.Add(new Account
+				{
+					EmployeeId = account.EmployeeId,
+					LastName = account.LastName
+				});
 			}
 
-			// returns all the names
-			return lastNames;
+			return accountEmails.ToArray();
 		}
+
 
 		[WebMethod]
 		public bool LogOff()
