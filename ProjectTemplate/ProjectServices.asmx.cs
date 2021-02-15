@@ -199,5 +199,102 @@ namespace ProjectTemplate
 			return true;
 		}
 
+
+		[WebMethod]
+		public void DeleteUser(string adminEmail, string adminPassword, int EmployeeIdToDelete)
+        {
+			bool isAdmin = CheckIfAdmin(adminEmail, adminPassword);
+
+			// if it was an admin it deletes the account
+			if (isAdmin)
+            {
+				string sqlDelete = "DELETE FROM Users WHERE EmployeeId=@employeeId";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand deleteCommand = new MySqlCommand(sqlDelete, sqlConnection);
+				deleteCommand.Parameters.AddWithValue("@employeeId", EmployeeIdToDelete);
+
+				sqlConnection.Open();
+				try
+				{
+					deleteCommand.ExecuteNonQuery();
+				}
+				catch (Exception e)
+				{
+				}
+				sqlConnection.Close();
+			}
+		}
+
+		
+		[WebMethod]
+		public void CreateAccount(string Email, string Password, string FirstName, string LastName, string PhoneNumber, string Title)
+        {
+			string sqlInsert = "insert into Users (Password, Email, FirstName, LastName, PhoneNumber, Title) " +
+				"Values(@password, @email, @firstName, @lastName, @phoneNumber, @title)";
+
+			MySqlConnection sqlConnection = new MySqlConnection(getConString());
+			//set up our command object to use our connection, and our query
+			MySqlCommand insertCommand = new MySqlCommand(sqlInsert, sqlConnection);
+			insertCommand.Parameters.AddWithValue("@password", Password);
+			insertCommand.Parameters.AddWithValue("@email", Email);
+			insertCommand.Parameters.AddWithValue("@firstName", FirstName);
+			insertCommand.Parameters.AddWithValue("@lastName", LastName);
+			insertCommand.Parameters.AddWithValue("@phoneNumber", PhoneNumber);
+			insertCommand.Parameters.AddWithValue("@title", Title);
+
+			sqlConnection.Open();
+			try
+			{
+				insertCommand.ExecuteNonQuery();
+			}
+			catch (Exception e)
+			{
+			}
+			sqlConnection.Close();
+		}
+		
+
+		public bool CheckIfAdmin(string adminEmail, string adminPassword)
+        {
+			bool isAdmin = false;
+			// Checks to see if an admin is initiating the delete
+			try
+			{
+				string sqlSelect = "SELECT EmployeeId FROM Users WHERE Email=@idValue and Password=@passValue and Title=@admin";
+
+				// Connects us to the database
+				MySqlConnection adminConnection = new MySqlConnection(getConString());
+				// Create new object to send the select statement to the database connection
+				MySqlCommand adminCommand = new MySqlCommand(sqlSelect, adminConnection);
+
+				//tell our command to replace the @parameters with the actual values
+				//we decode them because they had to be encoded to be sent over the web
+				adminCommand.Parameters.AddWithValue("@idValue", HttpUtility.UrlDecode(adminEmail));
+				adminCommand.Parameters.AddWithValue("@passValue", HttpUtility.UrlDecode(adminPassword));
+				adminCommand.Parameters.AddWithValue("@admin", "Admin");
+
+				//a data adapter acts like a bridge between our command object and 
+				//the data we are trying to get back and put in a table object
+				MySqlDataAdapter sqlData = new MySqlDataAdapter(adminCommand);
+				//here's the table we want to fill with the results from our query
+				DataTable sqlDatatable = new DataTable();
+				//here we go filling it!
+				sqlData.Fill(sqlDatatable);
+				//check to see if any rows were returned.  If they were, it means it's 
+				//a legit account
+				if (sqlDatatable.Rows.Count > 0)
+				{
+					//flip our flag to true so we return a value that lets them know they're logged in
+					isAdmin = true;
+				}
+			}
+			catch (Exception e)
+			{
+			}
+			return isAdmin;
+		}
+
 	}
 }
