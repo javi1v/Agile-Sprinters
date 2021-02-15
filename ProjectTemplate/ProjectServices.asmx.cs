@@ -6,9 +6,6 @@ using System.Web.Services;
 using MySql.Data;
 using MySql.Data.MySqlClient;
 using System.Data;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace ProjectTemplate
 {
@@ -23,14 +20,15 @@ namespace ProjectTemplate
 		private string dbID = "2021group4";
 		private string dbPass = "group42021";
 		private string dbName = "2021group4";
-		
+
 		////////////////////////////////////////////////////////////////////////
 		///call this method anywhere that you need the connection string!
 		////////////////////////////////////////////////////////////////////////
-		private string getConString() {
-			return "SERVER=107.180.1.16; PORT=3306; DATABASE=" + dbName+"; UID=" + dbID + "; PASSWORD=" + dbPass;
+		private string getConString()
+		{
+			return "SERVER=107.180.1.16; PORT=3306; DATABASE=" + dbName + "; UID=" + dbID + "; PASSWORD=" + dbPass;
 		}
-		
+
 
 		[WebMethod(EnableSession = true)]
 		public string TestConnection()
@@ -49,7 +47,7 @@ namespace ProjectTemplate
 			}
 			catch (Exception e)
 			{
-				return "Something went wrong, please check your credentials and db name and try again.  Error: "+e.Message;
+				return "Something went wrong, please check your credentials and db name and try again.  Error: " + e.Message;
 			}
 		}
 
@@ -103,7 +101,7 @@ namespace ProjectTemplate
 
 		[WebMethod]
 		public Account[] GetAccounts()
-        {
+		{
 			// TODO Check if a user is logged in
 			// TODO only give password out if the user is an admin
 			DataTable sqlDataTable = new DataTable();
@@ -118,7 +116,7 @@ namespace ProjectTemplate
 
 			List<Account> accounts = new List<Account>();
 			for (int i = 0; i < sqlDataTable.Rows.Count; i++)
-            {
+			{
 				accounts.Add(new Account
 				{
 					EmployeeId = Convert.ToInt32(sqlDataTable.Rows[i]["EmployeeId"]),
@@ -128,9 +126,9 @@ namespace ProjectTemplate
 					LastName = sqlDataTable.Rows[i]["LastName"].ToString(),
 					PhoneNumber = sqlDataTable.Rows[i]["PhoneNumber"].ToString(),
 					Title = sqlDataTable.Rows[i]["Title"].ToString()
-				}); 
-				
-            }
+				});
+
+			}
 
 			return accounts.ToArray();
 		}
@@ -139,9 +137,9 @@ namespace ProjectTemplate
 		[WebMethod]
 		public Account[] SeeEmails()
 		{
-
 			Account[] accounts = GetAccounts();
 			List<Account> accountEmails = new List<Account>();
+
 			foreach (Account account in accounts)
 			{
 				accountEmails.Add(new Account
@@ -158,9 +156,9 @@ namespace ProjectTemplate
 		[WebMethod]
 		public Account[] SeeFirstNames()
 		{
-
 			Account[] accounts = GetAccounts();
 			List<Account> accountEmails = new List<Account>();
+
 			foreach (Account account in accounts)
 			{
 				accountEmails.Add(new Account
@@ -179,6 +177,7 @@ namespace ProjectTemplate
 		{
 			Account[] accounts = GetAccounts();
 			List<Account> accountEmails = new List<Account>();
+
 			foreach (Account account in accounts)
 			{
 				accountEmails.Add(new Account
@@ -194,11 +193,11 @@ namespace ProjectTemplate
 
 		[WebMethod]
 		public bool LogOff()
-        {
+		{
 			// Can not log out of the system until their is a true log on feature
 			// Very temporary return true statement
 			return true;
-        }
+		}
 
 	}
 }
