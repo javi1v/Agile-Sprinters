@@ -52,10 +52,18 @@ namespace ProjectTemplate
 		}
 
 
-		[WebMethod]
+		[WebMethod(EnableSession = true)]
 		public int NumberOfAccounts()
 		{
 			Account[] account = GetAccounts();
+			return account.Length;
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public int NumberOfAccountRequests()
+		{
+			Account[] account = GetAccountRequests();
 			return account.Length;
 		}
 
@@ -101,98 +109,6 @@ namespace ProjectTemplate
 
 
 		[WebMethod(EnableSession = true)]
-		public Account[] GetAccounts()
-		{
-			// TODO Check if a user is logged in
-			// TODO only give password out if the user is an admin
-			DataTable sqlDataTable = new DataTable();
-			string sqlSelect = "select EmployeeId, Password, Email, FirstName, LastName, PhoneNumber, Title from Users";
-
-			MySqlConnection sqlConnection = new MySqlConnection(getConString());
-			//set up our command object to use our connection, and our query
-			MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
-
-			MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
-			sqlDa.Fill(sqlDataTable);
-
-			List<Account> accounts = new List<Account>();
-			for (int i = 0; i < sqlDataTable.Rows.Count; i++)
-			{
-				accounts.Add(new Account
-				{
-					EmployeeId = Convert.ToInt32(sqlDataTable.Rows[i]["EmployeeId"]),
-					Password = sqlDataTable.Rows[i]["Password"].ToString(),
-					Email = sqlDataTable.Rows[i]["Email"].ToString(),
-					FirstName = sqlDataTable.Rows[i]["FirstName"].ToString(),
-					LastName = sqlDataTable.Rows[i]["LastName"].ToString(),
-					PhoneNumber = sqlDataTable.Rows[i]["PhoneNumber"].ToString(),
-					Title = sqlDataTable.Rows[i]["Title"].ToString()
-				});
-
-			}
-
-			return accounts.ToArray();
-		}
-
-
-		[WebMethod]
-		public Account[] SeeEmails()
-		{
-			Account[] accounts = GetAccounts();
-			List<Account> accountEmails = new List<Account>();
-
-			foreach (Account account in accounts)
-			{
-				accountEmails.Add(new Account
-				{
-					EmployeeId = account.EmployeeId,
-					Email = account.Email
-				});
-			}
-
-			return accountEmails.ToArray();
-		}
-
-
-		[WebMethod]
-		public Account[] SeeFirstNames()
-		{
-			Account[] accounts = GetAccounts();
-			List<Account> accountEmails = new List<Account>();
-
-			foreach (Account account in accounts)
-			{
-				accountEmails.Add(new Account
-				{
-					EmployeeId = account.EmployeeId,
-					FirstName = account.FirstName
-				});
-			}
-
-			return accountEmails.ToArray();
-		}
-
-
-		[WebMethod]
-		public Account[] SeeLastNames()
-		{
-			Account[] accounts = GetAccounts();
-			List<Account> accountEmails = new List<Account>();
-
-			foreach (Account account in accounts)
-			{
-				accountEmails.Add(new Account
-				{
-					EmployeeId = account.EmployeeId,
-					LastName = account.LastName
-				});
-			}
-
-			return accountEmails.ToArray();
-		}
-
-
-		[WebMethod(EnableSession = true)]
 		public bool LogOff()
 		{
 			// This will make the user relog in, in order to access the services
@@ -200,6 +116,196 @@ namespace ProjectTemplate
 			Session.Abandon();
 			return true;
 		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Account[] GetAccounts()
+		{
+			// TODO Check if a user is logged in
+			// TODO only give password out if the user is an admin
+
+			if (Session["id"] != null)
+			{
+				DataTable sqlDataTable = new DataTable();
+				string sqlSelect = "select EmployeeId, Password, Email, FirstName, LastName, PhoneNumber, Title from Users where IsActive=1";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+				MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+				sqlDa.Fill(sqlDataTable);
+
+				List<Account> accounts = new List<Account>();
+				for (int i = 0; i < sqlDataTable.Rows.Count; i++)
+				{
+					if (isAdmin())
+					{
+						accounts.Add(new Account
+						{
+							EmployeeId = Convert.ToInt32(sqlDataTable.Rows[i]["EmployeeId"]),
+							Password = sqlDataTable.Rows[i]["Password"].ToString(),
+							Email = sqlDataTable.Rows[i]["Email"].ToString(),
+							FirstName = sqlDataTable.Rows[i]["FirstName"].ToString(),
+							LastName = sqlDataTable.Rows[i]["LastName"].ToString(),
+							PhoneNumber = sqlDataTable.Rows[i]["PhoneNumber"].ToString(),
+							Title = sqlDataTable.Rows[i]["Title"].ToString()
+						});
+					}
+					else
+					{
+						accounts.Add(new Account
+						{
+							EmployeeId = Convert.ToInt32(sqlDataTable.Rows[i]["EmployeeId"]),
+							Email = sqlDataTable.Rows[i]["Email"].ToString(),
+							FirstName = sqlDataTable.Rows[i]["FirstName"].ToString(),
+							LastName = sqlDataTable.Rows[i]["LastName"].ToString(),
+							PhoneNumber = sqlDataTable.Rows[i]["PhoneNumber"].ToString(),
+							Title = sqlDataTable.Rows[i]["Title"].ToString()
+						});
+
+					}
+
+				}
+				return accounts.ToArray();
+			}
+			else return new Account[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Account[] GetAccountRequests()
+		{
+			// checks if the user is an admin, and if it is shows them the accounts
+			if (isAdmin())
+			{
+				DataTable sqlDataTable = new DataTable();
+				string sqlSelect = "select EmployeeId, Email, FirstName, LastName, PhoneNumber, Title from Users where IsActive=0";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+				MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+				sqlDa.Fill(sqlDataTable);
+
+				List<Account> accountRequests = new List<Account>();
+				for (int i = 0; i < sqlDataTable.Rows.Count; i++)
+				{
+					accountRequests.Add(new Account
+					{
+						EmployeeId = Convert.ToInt32(sqlDataTable.Rows[i]["EmployeeId"]),
+						Email = sqlDataTable.Rows[i]["Email"].ToString(),
+						FirstName = sqlDataTable.Rows[i]["FirstName"].ToString(),
+						LastName = sqlDataTable.Rows[i]["LastName"].ToString(),
+						PhoneNumber = sqlDataTable.Rows[i]["PhoneNumber"].ToString(),
+						Title = sqlDataTable.Rows[i]["Title"].ToString()
+					});
+				}
+				return accountRequests.ToArray();
+			}
+			else return new Account[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Account[] SeeEmails()
+		{
+			if (isUser())
+			{
+				Account[] accounts = GetAccounts();
+				List<Account> accountEmails = new List<Account>();
+
+				foreach (Account account in accounts)
+				{
+					accountEmails.Add(new Account
+					{
+						EmployeeId = account.EmployeeId,
+						Email = account.Email
+					});
+				}
+
+				return accountEmails.ToArray();
+			}
+			else return new Account[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Account[] SeeFirstNames()
+		{
+			if (isUser())
+			{
+				Account[] accounts = GetAccounts();
+				List<Account> accountEmails = new List<Account>();
+
+				foreach (Account account in accounts)
+				{
+					accountEmails.Add(new Account
+					{
+						EmployeeId = account.EmployeeId,
+						FirstName = account.FirstName
+					});
+				}
+				return accountEmails.ToArray();
+			}
+			else return new Account[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Account[] SeeLastNames()
+		{
+			if (isUser())
+			{
+				Account[] accounts = GetAccounts();
+				List<Account> accountEmails = new List<Account>();
+
+				foreach (Account account in accounts)
+				{
+					accountEmails.Add(new Account
+					{
+						EmployeeId = account.EmployeeId,
+						LastName = account.LastName
+					});
+				}
+
+				return accountEmails.ToArray();
+			}
+			else return new Account[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public void UpdateAccount(string EmployeeIdToUpdate, string Email, string Password, string FirstName, string LastName, string PhoneNumber, string Title, string IsActive)
+        {
+			if (isAdmin())
+            {
+				string sqlUpdate = "update Users set Email=@Email, Password=@Password, FirstName=@FirstName," +
+					"LastName=@LastName, PhoneNumber=@PhoneNumber, Title=@Title, IsActive=@IsActive where EmployeeId=@EmployeeId";
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				MySqlCommand updateCommand = new MySqlCommand(sqlUpdate, sqlConnection);
+
+				updateCommand.Parameters.AddWithValue("@EmployeeId", Convert.ToInt32(HttpUtility.UrlDecode(EmployeeIdToUpdate)));
+				updateCommand.Parameters.AddWithValue("@Email", HttpUtility.UrlDecode(Email));
+				updateCommand.Parameters.AddWithValue("@Password", HttpUtility.UrlDecode(Password));
+				updateCommand.Parameters.AddWithValue("@FirstName", HttpUtility.UrlDecode(FirstName));
+				updateCommand.Parameters.AddWithValue("@LastName", HttpUtility.UrlDecode(LastName));
+				updateCommand.Parameters.AddWithValue("@PhoneNumber", HttpUtility.UrlDecode(PhoneNumber));
+				updateCommand.Parameters.AddWithValue("@Title", HttpUtility.UrlDecode(Title));
+				updateCommand.Parameters.AddWithValue("@IsActive", Convert.ToInt32(HttpUtility.UrlDecode(IsActive)));
+
+				sqlConnection.Open();
+				try
+                {
+					updateCommand.ExecuteNonQuery();
+                }
+				catch (Exception e)
+                {
+                }
+				sqlConnection.Close();
+			}
+        }
 
 
 		[WebMethod(EnableSession = true)]
@@ -243,9 +349,57 @@ namespace ProjectTemplate
 
 
 		[WebMethod(EnableSession = true)]
-		public void SendMessage(string EmployeeEmailToSendTo, string Subject, string Message)
+		public void ApproveAccount(string IdToEnable)
         {
-			string sqlMessage = "Insert into Messages (MessageId, From_id, To_id, Subject, Message, timesent, wasread) values(66, @fromEmail, @toEmail, @Subject, @Message, Now(), false)";
+			if (isAdmin())
+            {
+				string sqlUpdate = "update Users set IsActive=1 where EmployeeId = @IdToEnable";
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				MySqlCommand sqlCommand = new MySqlCommand(sqlUpdate, sqlConnection);
+
+				sqlCommand.Parameters.AddWithValue("@IdToEnable", Convert.ToInt32(HttpUtility.UrlDecode(IdToEnable)));
+
+				sqlConnection.Open();
+				try
+				{
+					sqlCommand.ExecuteNonQuery();
+				}
+				catch (Exception e)
+				{
+				}
+				sqlConnection.Close();
+			}
+        }
+
+
+		[WebMethod(EnableSession = true)]
+		public void RejectAccount(string IdToDelete)
+		{
+			if (isAdmin())
+			{
+				string sqlDelete = "delete from Users where EmployeeId=@EmployeeId";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				MySqlCommand sqlCommand = new MySqlCommand(sqlDelete, sqlConnection);
+
+				sqlCommand.Parameters.AddWithValue("@EmployeeId", Convert.ToInt32(HttpUtility.UrlDecode(IdToDelete)));
+
+				sqlConnection.Open();
+				try
+				{
+					sqlCommand.ExecuteNonQuery();
+				}
+				catch (Exception e)
+				{
+				}
+				sqlConnection.Close();
+			}
+		}
+
+
+		[WebMethod(EnableSession =true)]
+		public string GetCurrentEmail()
+        {
 			string sqlGetEmail = "Select Email from Users where EmployeeId = @EmployeeId";
 			string currentEmailAddress = "";
 
@@ -264,8 +418,16 @@ namespace ProjectTemplate
 			if (sqlDt.Rows.Count > 0)
 			{
 				currentEmailAddress = sqlDt.Rows[0]["Email"].ToString();
-				
 			}
+			return currentEmailAddress;
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public void SendMessage(string EmployeeEmailToSendTo, string Subject, string Message)
+        {
+			string sqlMessage = "Insert into Messages (From_id, To_id, Subject, Message, timesent, wasread) values(@fromEmail, @toEmail, @Subject, @Message, Now(), false)";
+			string currentEmailAddress = GetCurrentEmail();
 			
 			MySqlConnection connection = new MySqlConnection(getConString());
 			//set up our command object to use our connection, and our query
@@ -284,17 +446,125 @@ namespace ProjectTemplate
 			{
 			}
 			connection.Close();
-
 		}
 
-		[WebMethod]
-		public void DeleteUser(string adminEmail, string adminPassword, int EmployeeIdToDelete)
-        {
-			bool isAdmin = CheckIfAdmin(adminEmail, adminPassword);
 
+		[WebMethod(EnableSession = true)] 
+		public Message[] GetMessages()
+        {
+			// checks if the user is an admin, and if it is shows them the accounts
+			if (isUser())
+			{
+				DataTable sqlDataTable = new DataTable();
+				string sqlSelect = "select MessageId, From_id, To_id, Subject, Message, timesent, wasRead from Messages where To_id=@To_id";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+				sqlCommand.Parameters.AddWithValue("@To_id", GetCurrentEmail());
+
+				MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+				sqlDa.Fill(sqlDataTable);
+
+				List<Message> messages = new List<Message>();
+				for (int i = 0; i < sqlDataTable.Rows.Count; i++)
+				{
+					messages.Add(new Message
+					{
+						MessageId = Convert.ToInt32(sqlDataTable.Rows[i]["MessageId"]),
+						From_id = sqlDataTable.Rows[i]["From_id"].ToString(),
+						To_id = sqlDataTable.Rows[i]["To_id"].ToString(),
+						Subject = sqlDataTable.Rows[i]["Subject"].ToString(),
+						Text = sqlDataTable.Rows[i]["Message"].ToString(),
+						timesent = sqlDataTable.Rows[i]["timesent"].ToString(),
+						wasRead = sqlDataTable.Rows[i]["wasRead"].ToString()
+					});
+				}
+				return messages.ToArray();
+			}
+			else return new Message[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Message[] GetSentMessages()
+		{
+			// checks if the user is an admin, and if it is shows them the accounts
+			if (isUser())
+			{
+				DataTable sqlDataTable = new DataTable();
+				string sqlSelect = "select MessageId, From_id, To_id, Subject, Message, timesent, wasRead from Messages where From_id=@From_id";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+				sqlCommand.Parameters.AddWithValue("@From_id", GetCurrentEmail());
+
+				MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+				sqlDa.Fill(sqlDataTable);
+
+				List<Message> messages = new List<Message>();
+				for (int i = 0; i < sqlDataTable.Rows.Count; i++)
+				{
+					messages.Add(new Message
+					{
+						MessageId = Convert.ToInt32(sqlDataTable.Rows[i]["MessageId"]),
+						From_id = sqlDataTable.Rows[i]["From_id"].ToString(),
+						To_id = sqlDataTable.Rows[i]["To_id"].ToString(),
+						Subject = sqlDataTable.Rows[i]["Subject"].ToString(),
+						Text = sqlDataTable.Rows[i]["Message"].ToString(),
+						timesent = sqlDataTable.Rows[i]["timesent"].ToString(),
+						wasRead = sqlDataTable.Rows[i]["wasRead"].ToString()
+					});
+				}
+				return messages.ToArray();
+			}
+			else return new Message[0];
+		}
+
+
+		[WebMethod(EnableSession = true)]
+		public Message[] GetAllMessages()
+        {
+			if (isAdmin())
+			{
+				DataTable sqlDataTable = new DataTable();
+				string sqlSelect = "select MessageId, From_id, To_id, Subject, Message, timesent, wasRead from Messages";
+
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand sqlCommand = new MySqlCommand(sqlSelect, sqlConnection);
+
+				MySqlDataAdapter sqlDa = new MySqlDataAdapter(sqlCommand);
+				sqlDa.Fill(sqlDataTable);
+
+				List<Message> messages = new List<Message>();
+				for (int i = 0; i < sqlDataTable.Rows.Count; i++)
+				{
+					messages.Add(new Message
+					{
+						MessageId = Convert.ToInt32(sqlDataTable.Rows[i]["MessageId"]),
+						From_id = sqlDataTable.Rows[i]["From_id"].ToString(),
+						To_id = sqlDataTable.Rows[i]["To_id"].ToString(),
+						Subject = sqlDataTable.Rows[i]["Subject"].ToString(),
+						Text = sqlDataTable.Rows[i]["Message"].ToString(),
+						timesent = sqlDataTable.Rows[i]["timesent"].ToString(),
+						wasRead = sqlDataTable.Rows[i]["wasRead"].ToString()
+					});
+				}
+				return messages.ToArray();
+			}
+			else return new Message[0];
+		}
+
+
+
+		[WebMethod(EnableSession = true)]
+		public void DeleteUser(int EmployeeIdToDelete)
+        {
 			// if it was an admin it deletes the account
-			if (isAdmin)
-            {
+			if (isAdmin())
+			{
 				string sqlDelete = "DELETE FROM Users WHERE EmployeeId=@employeeId";
 
 				MySqlConnection sqlConnection = new MySqlConnection(getConString());
@@ -315,34 +585,66 @@ namespace ProjectTemplate
 		}
 
 		
-		[WebMethod]
+		[WebMethod(EnableSession = true)]
 		public void CreateAccount(string Email, string Password, string FirstName, string LastName, string PhoneNumber, string Title)
         {
-			string sqlInsert = "insert into Users (Password, Email, FirstName, LastName, PhoneNumber, Title) " +
-				"Values(@password, @email, @firstName, @lastName, @phoneNumber, @title)";
+			if (isAdmin())
+            {
+				string sqlInsert = "insert into Users (Password, Email, FirstName, LastName, PhoneNumber, Title, IsActive) " +
+				"Values(@password, @email, @firstName, @lastName, @phoneNumber, @title, 1)";
 
-			MySqlConnection sqlConnection = new MySqlConnection(getConString());
-			//set up our command object to use our connection, and our query
-			MySqlCommand insertCommand = new MySqlCommand(sqlInsert, sqlConnection);
-			insertCommand.Parameters.AddWithValue("@password", Password);
-			insertCommand.Parameters.AddWithValue("@email", Email);
-			insertCommand.Parameters.AddWithValue("@firstName", FirstName);
-			insertCommand.Parameters.AddWithValue("@lastName", LastName);
-			insertCommand.Parameters.AddWithValue("@phoneNumber", PhoneNumber);
-			insertCommand.Parameters.AddWithValue("@title", Title);
+				MySqlConnection sqlConnection = new MySqlConnection(getConString());
+				//set up our command object to use our connection, and our query
+				MySqlCommand insertCommand = new MySqlCommand(sqlInsert, sqlConnection);
+				insertCommand.Parameters.AddWithValue("@password", Password);
+				insertCommand.Parameters.AddWithValue("@email", Email);
+				insertCommand.Parameters.AddWithValue("@firstName", FirstName);
+				insertCommand.Parameters.AddWithValue("@lastName", LastName);
+				insertCommand.Parameters.AddWithValue("@phoneNumber", PhoneNumber);
+				insertCommand.Parameters.AddWithValue("@title", Title);
 
-			sqlConnection.Open();
-			try
-			{
-				insertCommand.ExecuteNonQuery();
+				sqlConnection.Open();
+				try
+				{
+					insertCommand.ExecuteNonQuery();
+				}
+				catch (Exception e)
+				{
+				}
+				sqlConnection.Close();
 			}
-			catch (Exception e)
-			{
-			}
-			sqlConnection.Close();
 		}
 		
 
+		[WebMethod(EnableSession = true)] 
+		public bool isAdmin()
+        {
+			if (Session["admin"] != null)
+			{
+				if (Session["admin"].ToString() == "admin" || Session["admin"].ToString() == "Admin")
+				{
+					return true;
+				}
+				else return false;
+			}
+			else return false;
+		}
+
+		
+		[WebMethod(EnableSession = true)]
+		public bool isUser()
+        {
+			if (Session["id"] != null)
+			{
+				return true;
+			}
+			else return false;
+        }
+		
+		//WARNING
+		// A deprecated function replaced with the built in Session Id 
+		//WARNING
+		/*
 		public bool CheckIfAdmin(string adminEmail, string adminPassword)
         {
 			bool isAdmin = false;
@@ -382,6 +684,7 @@ namespace ProjectTemplate
 			}
 			return isAdmin;
 		}
+		*/
 
 	}
 }
