@@ -160,14 +160,13 @@
                 success: function (msg) {
                     if (msg.d.length > 0) {
                         $("#requestsBox").empty();
-                        admin = false;
                         for (var i = 0; i < msg.d.length; i++) {
-                            req = "<div class='accountRow' id='acctR" + msg.d[i].id + "'>" +
+                            req = "<div class='accountRow' id='acctR" + msg.d[i].EmployeeId + "'>" +
                                 "<span class='nameTag'>" +
-                                msg.d[i].firstName + " " + msg.d[i].lastName +
-                                "</span> <span class='optionsTag'><a href='#' onclick='approveAccount(" + msg.d[i].id + ")'>yes</a> / " +
-                                "<a href='#' onclick='rejectAccount(" + msg.d[i].id + ")'>no</a></span>" +
-                                "<div style='font-size: smaller'>" + msg.d[i].email + "</div></div > <hr>";
+                                msg.d[i].FirstName + " " + msg.d[i].LastName +
+                                "</span> <span class='optionsTag'><a href='#' onclick='approveAccount(" + msg.d[i].EmployeeId + ")'>Yes</a> / " +
+                                "<a href='#' onclick='rejectAccount(" + msg.d[i].EmployeeId + ")'>No</a></span>" +
+                                "<div style='font-size: smaller; padding: .5vh;'>" + msg.d[i].Email + "</div></div > <hr>";
                             $("#requestsBox").append(req);
                         }
                     }
