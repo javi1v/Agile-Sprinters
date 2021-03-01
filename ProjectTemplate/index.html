@@ -1,17 +1,17 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8" />
-	<title>Agile Sprinters</title>
-	<!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <meta charset="utf-8" />
+    <title>Agile Sprinters</title>
+    <!--DO NOT FORGET THIS SCRIPT TAG SO YOU CAN USE JQUERY!!!!!-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-	<!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
-	<script type="text/javascript">
+    <!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
+    <script type="text/javascript">
         //we're using a stacked card approach for our main viewing area
         //this array holds the ids of our cards and the method
         //allows us to easly switch the interface from one to the other
-        var contentPanels = ['logonPanel', 'newAccountPanel', 'accountsPanel', 'editAccountPanel', 'requestsPanel'];
+        var contentPanels = ['logonPanel', 'newAccountPanel', 'accountsPanel', 'editAccountPanel', 'requestsPanel', 'messagePanel', 'sendMessagePanel'];
         //this function toggles which panel is showing, and also clears data from all panels
         function showPanel(panelId) {
             clearData();
@@ -28,6 +28,7 @@
         //this function clears data from all panels
         function clearData() {
             $("#accountsBox").empty();
+            $("#userCount").empty();
             $("#requestsBox").empty();
             clearNewAccount();
             clearLogon();
@@ -98,6 +99,7 @@
                         accountsArray = msg.d;
                         //this clears out the div that will hold our account info
                         $("#accountsBox").empty();
+                        $("#userCount").empty();
                         $("#accountsBox").append();
                         $("#accountsBox").append(baseTable);
                         //again, we assume we're not an admin unless we see data from the server
@@ -151,12 +153,12 @@
         function LoadRequests() {
             var webMethod = "ProjectServices.asmx/GetAccountRequests";
             $.ajax({
-               type: "POST",
+                type: "POST",
                 url: webMethod,
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (msg) {
-                   if (msg.d.length > 0) {
+                    if (msg.d.length > 0) {
                         $("#requestsBox").empty();
                         admin = false;
                         for (var i = 0; i < msg.d.length; i++) {
@@ -263,20 +265,22 @@
 
         //resets the new account inputs
         function clearNewAccount() {
-            $('#newLogonId').val("");
+            $('#newLogonEmail').val("");
             $('#newLogonPassword').val("");
             $('#newLogonFName').val("");
             $('#newLogonLName').val("");
-            $('#newLogonEmail').val("");
+            $('#newLogonPhone').val("");
+            $('#newLogonTitle').val("");
         }
 
         //resets the edit account inputs
         function clearEditAccount() {
-            $('#editLogonId').val("");
+            $('#editLogonEmail').val("");
             $('#editLogonPassword').val("");
             $('#editLogonFName').val("");
             $('#editLogonLName').val("");
-            $('#editLogonEmail').val("");
+            $('#editLogonPhone').val("");
+            $('#editLogonTitle').val("");
         }
 
         //resets the logon inputs
@@ -285,10 +289,16 @@
             $('#logonPassword').val("");
         }
 
+        function clearMessage() {
+            $('#newToEmail').val("");
+            $('#newSubject').val("");
+            $('#newMessage').val("");
+        }
+
         //passes account info to the server, to create an account request
-        function CreateAccount(id, pass, fname, lname, email) {
+        function CreateAccount(email, pass, fname, lname, phone, title) {
             var webMethod = "ProjectServices.asmx/RequestAccount";
-            var parameters = "{\"uid\":\"" + encodeURI(id) + "\",\"pass\":\"" + encodeURI(pass) + "\",\"firstName\":\"" + encodeURI(fname) + "\",\"lastName\":\"" + encodeURI(lname) + "\",\"email\":\"" + encodeURI(email) + "\"}";
+            var parameters = "{\"Email\":\"" + encodeURI(email) + "\",\"Password\":\"" + encodeURI(pass) + "\",\"FirstName\":\"" + encodeURI(fname) + "\",\"LastName\":\"" + encodeURI(lname) + "\",\"PhoneNumber\":\"" + encodeURI(phone) + "\",\"Title\":\"" + encodeURI(title) + "\"}";
 
             $.ajax({
                 type: "POST",
@@ -342,8 +352,8 @@
 
         //an ajax to kill an account
         function DeactivateAccount() {
-            var webMethod = "ProjectServices.asmx/DeleteAccount";
-            var parameters = "{\"id\":\"" + encodeURI(currentAccount.id) + "\"}";
+            var webMethod = "ProjectServices.asmx/DeleteUser";
+            var parameters = "{\"adminEmail\":\"" + encodeURI(currentAccount.Email) + "\"}";
 
             $.ajax({
                 type: "POST",
@@ -375,11 +385,12 @@
             }
             //set up our inputs
             if (currentAccount != null) {
-                $('#editLogonId').val(currentAccount.userId);
+                $('#editLogonEmail').val(currentAccount.email);
                 $('#editLogonPassword').val(currentAccount.password);
                 $('#editLogonFName').val(currentAccount.firstName);
                 $('#editLogonLName').val(currentAccount.lastName);
-                $('#editLogonEmail').val(currentAccount.email);
+                $('#editLogonPhone').val(currentAccount.phoneNumber);
+                $('#editLogonTitle').val(currentAccount.title);
             }
         }
 
@@ -403,11 +414,64 @@
                 }
             });
         }
-	</script>
-	<!--END OF YOUR OWN JAVASCRIPT-->
 
-	<!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
-	<style>
+        function SendMessage(toEmail, subject, message) {
+            var webMethod = "ProjectServices.asmx/SendMessage";
+            var parameters = "{\"EmployeeEmailToSendTo\":\"" + encodeURI(toEmail) + "\",\"Subject\":\"" + encodeURI(subject) + "\",\"Message\":\"" + encodeURI(message) + "\"}";
+
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    clearMessage();
+                    showPanel(accountsPanel);
+                    alert("Message was sent!");
+                },
+                error: function (e) {
+                    alert("Error sending message...");
+                }
+            });
+        }
+
+        function toggleLike(state) {
+            state.classList.toggle("fa-thumbs-down");
+        }
+
+        function getMessages() {
+
+            var webMethod = "ProjectServices.asmx/GetMessages";
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d.length > 0) {
+                        $("#messageBox").empty();
+                        for (var i = 0; i < msg.d.length; i++) {
+                            var res = "<div class=\"messageItem\"><p>From: " + msg.d[i].From_id + "</p><p>Subject: " + msg.d[i].Subject + "</p><p>Message: " + msg.d[i].Text + "</p><i onclick=\"toggleLike(this)\" class=\"fa fa-thumbs-up\"></i></div>";
+                            $("#messageBox").append(res);
+                        }
+                    }
+                },
+                error: function (e) {
+                    alert("message view failed");
+                }
+            });
+        }
+
+        function showMessages() {
+            showPanel('messagePanel');
+            getMessages();
+        }
+    </script>
+    <!--END OF YOUR OWN JAVASCRIPT-->
+    <!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
         html, body {
             display: flex;
             flex-direction: column;
@@ -464,10 +528,10 @@
             right: 5px;
         }
 
-        .menu a {
-            color: white;
-            text-decoration: none;
-        }
+            .menu a {
+                color: white;
+                text-decoration: none;
+            }
 
         .contentContainer {
             flex: 1;
@@ -484,7 +548,7 @@
             visibility: hidden;
             flex: 1;
             /*border: 1px solid gray;
-			border-radius: 25px;*/
+            border-radius: 25px;*/
         }
 
         .logonPanel {
@@ -502,21 +566,21 @@
             width: 70vw;
         }
 
-        .logonBox div {
-            padding: 0px;
-            margin: 0px;
-        }
+            .logonBox div {
+                padding: 0px;
+                margin: 0px;
+            }
 
-        .logonBox hr {
-            padding: 0px;
-            margin-bottom: 1vh;
-        }
+            .logonBox hr {
+                padding: 0px;
+                margin-bottom: 1vh;
+            }
 
-        .logonBox input {
-            width: 100%;
-            border: 1px inset gray;
-            margin-bottom: 1vh;
-        }
+            .logonBox input {
+                width: 100%;
+                border: 1px inset gray;
+                margin-bottom: 1vh;
+            }
 
         .newAccountPanel {
             text-align: center;
@@ -527,25 +591,25 @@
             text-align: right;
         }
 
-        .newAccountBox input {
-            width: 100px;
-            border: 1px inset gray;
-        }
+            .newAccountBox input {
+                width: 100px;
+                border: 1px inset gray;
+            }
 
-        .newAccountBox hr {
-            padding: 0px;
-            margin: 0px;
-        }
+            .newAccountBox hr {
+                padding: 0px;
+                margin: 0px;
+            }
 
         .accountsBox {
             display: inline-block;
             text-align: center;
             width: 100vw;
         }
-        
-        .accountsBox a {
-            text-align: center;
-        }
+
+            .accountsBox a {
+                text-align: center;
+            }
 
         .accountBox th, td {
             width: 33vw;
@@ -631,9 +695,27 @@
             text-decoration: none;
             border-radius: 5px;
         }
-	</style>
-	<!--END OF YOUR OWN CSS-->
-</head >
+
+        #newMessage {
+            height: 30vh;
+        }
+
+        .messageItem {
+            border: 1px solid black;
+        }
+
+        .fa {
+            font-size: 5vh;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .fa:hover {
+            color: #4CAF50;
+        }
+    </style>
+    <!--END OF YOUR OWN CSS-->
+</head>
 <body>
     <div class="titleContainer">
         <span>Agile Sprinters</span>
@@ -677,6 +759,7 @@
             <hr />
             <table class="accountsBox" id="accountsBox" align="center"></table>
             <div id="userCount"></div>
+            <a href="#" onclick="showMessages()" class="optionsTag">View Messages</a>
         </div>
 
         <div id="requestsPanel" class="contentPanel">
@@ -688,17 +771,48 @@
             </div>
         </div>
 
+        <div id="messagePanel" class="contentPanel">
+            <div class="left">View Messages</div>
+            <hr />
+            <div class="messageBox" id="messageBox" style="overflow: scroll;">
+                
+            </div>
+            <button onclick="showPanel('sendMessagePanel')" class="optionsTag">Send Message</button>
+        </div>
+
+        <div id="sendMessagePanel" class="contentPanel">
+            <div class="left">New Message</div>
+            <hr />
+            <div class="sendMessageBox" id="sendMessageBox">
+                <form onsubmit="SendMessage($('#newToEmail').val(), $('#newSubject').val(), $('#newMessage').val());">
+                    <div>
+                        Email: <input type="text" id="newToEmail" />
+                    </div>
+                    <div>
+                        Subject: <input type="text" id="newSubject" />
+                    </div>
+                    <div>
+                        Message: <input type="text" id="newMessage" />
+                    </div>
+                    <hr />
+                    <div>
+                        <button type="submit" class="optionsTag">Send</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div id="newAccountPanel" class="contentPanel newAccountPanel">
             <div class="newAccountBox">
-                <form onsubmit="CreateAccount($('#newLogonId').val(), $('#newLogonPassword').val(), $('#newLogonFName').val(), $('#newLogonLName').val(), $('#newLogonEmail').val()); return false;">
+                <form onsubmit="CreateAccount($('#newLogonEmail').val(), $('#newLogonPassword').val(), $('#newLogonFName').val(), $('#newLogonLName').val(), $('#newLogonPhone').val(), $('#newLogonTitle').val()); return false;">
                     <div class="left">Request Account</div>
                     <div><a href="#" onclick="showPanel('logonPanel')" class="tinyLink">...or log on</a></div>
                     <hr />
                     <div>
-                        ID: <input type="text" id="newLogonId" />
+                        Email: <input type="text" id="newLogonEmail" />
                     </div>
                     <div>
-                        Pwd: <input type="password" id="newLogonPassword" />
+                        Password: <input type="password" id="newLogonPassword" />
                     </div>
                     <div>
                         First: <input type="text" id="newLogonFName" />
@@ -707,7 +821,10 @@
                         Last: <input type="text" id="newLogonLName" />
                     </div>
                     <div>
-                        Email: <input type="text" id="newLogonEmail" />
+                        Phone: <input type="text" id="newLogonPhone" />
+                    </div>
+                    <div>
+                        Title: <input type="text" id="newLogonTitle" />
                     </div>
                     <hr />
                     <div>
@@ -725,10 +842,10 @@
                     <div><a href="#" onclick="DeactivateAccount()" class="tinyLink">...or deactivate</a></div>
                     <hr />
                     <div>
-                        ID: <input type="text" id="editLogonId" />
+                        Email: <input type="text" id="editLogonEmail" />
                     </div>
                     <div>
-                        Pwd: <input type="password" id="editLogonPassword" />
+                        Password: <input type="password" id="editLogonPassword" />
                     </div>
                     <div>
                         First: <input type="text" id="editLogonFName" />
@@ -737,7 +854,10 @@
                         Last: <input type="text" id="editLogonLName" />
                     </div>
                     <div>
-                        Email: <input type="text" id="editLogonEmail" />
+                        Phone: <input type="text" id="editLogonPhone" />
+                    </div>
+                    <div>
+                        Title: <input type="text" id="editLogonTitle" />
                     </div>
                     <hr />
                     <div>
